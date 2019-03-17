@@ -4,10 +4,23 @@
           name: openvpn
           state: latest
 
-- name: Copy .ovpn file
+          #- name: Copy .ovpn file from OpenVPN server
+          #  synchronize:
+          #          src: "/etc/openvpn/openvpn-ca/keys/{{ ansible_hostname }}.ovpn"
+          #          dest: /etc/openvpn/server.conf
+          #  delegate_to: thinkcentre
+
+- name: Bring .ovpn file from OpenVPN server
+  fetch:
+          src: "/etc/openvpn/openvpn-ca/keys/{{ ansible_hostname }}.ovpn"
+          dest: /tmp/
+          flat: yes
+  delegate_to: thinkcentre
+
+- name: Push .ovpn file to client
   copy:
-          src: "files/{{ ansible_hostname }}.ovpn"
-          dest: /etc/openvpn/homelab.conf
+          src: "/tmp/{{ ansible_hostname }}.ovpn"
+          dest: /etc/openvpn/server.conf
 
 - name: Autostart OpenVPN connection
   lineinfile:
@@ -17,6 +30,6 @@
 
 - name: Restart openvpn service
   systemd:
-          name: openvpn
+          name: openvpn@server
           enabled: true
           state: restarted
