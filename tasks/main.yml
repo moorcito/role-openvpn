@@ -10,16 +10,9 @@
           #          dest: /etc/openvpn/server.conf
           #  delegate_to: thinkcentre
 
-- name: Bring .ovpn file from OpenVPN server
-  fetch:
-          src: "/etc/openvpn/openvpn-ca/keys/{{ ansible_hostname }}.ovpn"
-          dest: /tmp/
-          flat: yes
-  delegate_to: thinkcentre
-
 - name: Push .ovpn file to client
   copy:
-          src: "/tmp/{{ ansible_hostname }}.ovpn"
+          src: "/etc/openvpn/openvpn-ca/keys/{{ ansible_hostname }}.ovpn"
           dest: /etc/openvpn/server.conf
 
 - name: Autostart OpenVPN connection
