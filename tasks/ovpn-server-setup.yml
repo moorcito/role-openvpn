@@ -44,7 +44,7 @@
     creates: "{{ easy_rsa_directory }}/pki/dh.pem"
 
 - name: Generate HMAC signature
-  command: openvpn --genkey --secret ta.key
+  command: "openvpn --genkey --secret ta.key"
   args:
     chdir: "{{ easy_rsa_directory }}"
     creates: "{{ easy_rsa_directory }}/ta.key"
@@ -54,12 +54,13 @@
   copy:
     src: "{{ item }}"
     dest: "/etc/openvpn"
+    remote_src: yes
   with_items:
    - "{{ easy_rsa_directory }}/pki/ca.crt"
    - "{{ easy_rsa_directory }}/pki/issued/server.crt"
    - "{{ easy_rsa_directory }}/pki/private/server.key"
    - "{{ easy_rsa_directory }}/pki/dh.pem"
-   - "{{ easy_rsa_directory }}/pki/ta.key"
+   - "{{ easy_rsa_directory }}/ta.key"
 
 - name: Create server config
   copy:
@@ -74,3 +75,11 @@
 
 - name: Apply /etc/sysctl.conf changes
   command: "sysctl -p"
+
+- name: Start & enable openvpn service
+  systemd:
+    name: openvpn@server
+    state: started
+    enabled: yes
+
+
