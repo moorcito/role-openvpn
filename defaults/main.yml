@@ -1,2 +1,12 @@
 ---
 # defaults file for role-openvpn
+ovpn_server: true
+easy_rsa_version: 3.0.6
+easy_rsa_url: "https://github.com/OpenVPN/easy-rsa/releases/download/v{{ easy_rsa_version }}/EasyRSA-unix-v{{ easy_rsa_version }}.tgz"
+easy_rsa_directory: "/etc/openvpn/EasyRSA-v{{ easy_rsa_version }}/"
+easyrsa_req_country: ES
+easyrsa_req_province: MADRID
+easyrsa_req_city: MADRID
+easyrsa_req_org: HLAB
+easyrsa_req_email: "root@{{ inventory_hostname }}"
+easyrsa_req_ou: HLAB
