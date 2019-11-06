@@ -1,28 +1,5 @@
 ---
-- name: Install OpenVPN & EasyRSA
-  apt:
-          name: openvpn
-          state: latest
+- name: OpenVPN server setup
+  include_tasks: ovpn-server-setup.yml
+  when: ovpn_server == True
 
-          #- name: Copy .ovpn file from OpenVPN server
-          #  synchronize:
-          #          src: "/etc/openvpn/openvpn-ca/keys/{{ ansible_hostname }}.ovpn"
-          #          dest: /etc/openvpn/server.conf
-          #  delegate_to: thinkcentre
-
-- name: Push .ovpn file to client
-  copy:
-          src: "/etc/openvpn/openvpn-ca/keys/{{ ansible_hostname }}.ovpn"
-          dest: /etc/openvpn/server.conf
-
-- name: Autostart OpenVPN connection
-  lineinfile:
-          path: /etc/default/openvpn
-          regexp: '^#AUTOSTART="all"'
-          line: 'AUTOSTART="all"'
-
-- name: Restart openvpn service
-  systemd:
-          name: openvpn@server
-          enabled: true
-          state: restarted
