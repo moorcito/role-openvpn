@@ -1,0 +1,31 @@
+---
+- name: Add OpenVPN apt key
+  apt_key:
+    url: https://swupdate.openvpn.net/repos/repo-public.gpg
+    state: present
+
+- name: Add OpenVPN repository
+  apt_repository:
+    repo: "deb http://build.openvpn.net/debian/openvpn/stable {{ ansible_distribution_release }} main"
+    state: present
+
+- name: Install OpenVPN from official repo
+  apt:
+    name: openvpn
+    state: latest
+    update_cache: yes
+
+- name: Create OpenVPN log directory
+  file:
+    path: "/var/log/openvpn"
+    state: directory
+    mode: 0755
+
+- name: Create log files
+  file:
+    path: "{{ item }}"
+    state: touch
+    mode: 0644
+  with_items:
+  - "/var/log/openvpn/openvpn.log"
+  - "/var/log/openvpn/openvpn-status.log"

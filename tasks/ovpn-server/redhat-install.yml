@@ -1,0 +1,16 @@
+---
+- name: Ensure epel is installed
+  yum:
+    name: epel-release
+    state: latest
+
+- name: OpenVPN repository setup
+  block:
+  - name: Install openvpn and wget
+    yum:
+      name: "{{ packages }}"
+      state: latest
+    vars:
+      packages:
+      - openvpn
+      - wget

@@ -1,0 +1,76 @@
+---
+- name: "Include installation tasks for {{ ansible_os_family }} based hosts"
+  include_tasks: "ovpn-server/{{ ansible_os_family|lower }}-install.yml"
+
+- name: Unpack EasyRSA tarball
+  unarchive:
+    src: "{{ easy_rsa_url }}"
+    dest: /etc/openvpn/
+    remote_src: yes
+
+- name: Template vars file
+  template:
+    src: templates/vars.j2
+    dest: "{{ easy_rsa_directory }}/vars"
+
+- name: Initialize PKI
+  command: "./easyrsa init-pki"
+  args:
+    chdir: "{{ easy_rsa_directory }}"
+    creates: "{{ easy_rsa_directory}}/pki"
+
+- name: Build CA
+  command: "./easyrsa --batch build-ca nopass"
+  args:
+    chdir: "{{ easy_rsa_directory }}"
+    creates: "{{ easy_rsa_directory}}/pki/ca.crt"
+
+- name: Generate server certs
+  command: "./easyrsa --batch build-server-full server nopass"
+  args:
+    chdir: "{{ easy_rsa_directory }}"
+    creates: "{{ easy_rsa_directory}}/pki/private/server.key"
+
+#- name: Generate client certs
+#  command: "./easyrsa --batch build-client-full client nopass"
+#  args:
+#   chdir: "{{ easy_rsa_directory }}"
+#   creates: "{{ easy_rsa_directory}}/pki/private/client.key"
+
+- name: Generate Diffie-Hellman key
+  command: "./easyrsa --batch gen-dh"
+  args:
+    chdir: "{{ easy_rsa_directory }}"
+    creates: "{{ easy_rsa_directory }}/pki/dh.pem"
+
+- name: Generate HMAC signature
+  command: openvpn --genkey --secret ta.key
+  args:
+    chdir: "{{ easy_rsa_directory }}"
+    creates: "{{ easy_rsa_directory }}/ta.key"
+
+
+- name: Move certificates to /etc/openvpn
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/openvpn"
+  with_items:
+   - "{{ easy_rsa_directory }}/pki/ca.crt"
+   - "{{ easy_rsa_directory }}/pki/issued/server.crt"
+   - "{{ easy_rsa_directory }}/pki/private/server.key"
+   - "{{ easy_rsa_directory }}/pki/dh.pem"
+   - "{{ easy_rsa_directory }}/pki/ta.key"
+
+- name: Create server config
+  copy:
+    src: files/server.conf
+    dest: /etc/openvpn/server.conf
+
+- name: Edit /etc/sysctl.conf to enable packet forwarding
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^#net.ipv4.ip_forward=1$'
+    line: 'net.ipv4.ip_forward=1'
+
+- name: Apply /etc/sysctl.conf changes
+  command: "sysctl -p"
