@@ -3,3 +3,6 @@
   include_tasks: ovpn-server-setup.yml
   when: ovpn_server == True
 
+- name: OpenVPN client config generation
+  include_tasks: ovpn-client-config.yml
+  when: ovpn_clients is defined

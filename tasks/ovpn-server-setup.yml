@@ -31,12 +31,6 @@
     chdir: "{{ easy_rsa_directory }}"
     creates: "{{ easy_rsa_directory}}/pki/private/server.key"
 
-#- name: Generate client certs
-#  command: "./easyrsa --batch build-client-full client nopass"
-#  args:
-#   chdir: "{{ easy_rsa_directory }}"
-#   creates: "{{ easy_rsa_directory}}/pki/private/client.key"
-
 - name: Generate Diffie-Hellman key
   command: "./easyrsa --batch gen-dh"
   args:
@@ -50,17 +44,17 @@
     creates: "{{ easy_rsa_directory }}/ta.key"
 
 
-- name: Move certificates to /etc/openvpn
+- name: Copy certificates to /etc/openvpn
   copy:
     src: "{{ item }}"
     dest: "/etc/openvpn"
     remote_src: yes
   with_items:
-   - "{{ easy_rsa_directory }}/pki/ca.crt"
-   - "{{ easy_rsa_directory }}/pki/issued/server.crt"
-   - "{{ easy_rsa_directory }}/pki/private/server.key"
-   - "{{ easy_rsa_directory }}/pki/dh.pem"
-   - "{{ easy_rsa_directory }}/ta.key"
+  - "{{ easy_rsa_directory }}/pki/ca.crt"
+  - "{{ easy_rsa_directory }}/pki/issued/server.crt"
+  - "{{ easy_rsa_directory }}/pki/private/server.key"
+  - "{{ easy_rsa_directory }}/pki/dh.pem"
+  - "{{ easy_rsa_directory }}/ta.key"
 
 - name: Create server config
   copy:
