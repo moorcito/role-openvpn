@@ -1,0 +1,55 @@
+---
+- name: Generate client certs
+  command: "./easyrsa --batch build-client-full {{ item }} nopass"
+  args:
+    chdir: "{{ easy_rsa_directory }}"
+    creates: "{{ easy_rsa_directory}}/pki/private/{{ item }}.key"
+  with_items: "{{ ovpn_clients }}"
+
+- name: Create clients config directory
+  file:
+    path: /etc/openvpn/client_configs
+    state: directory
+
+- name: Create local ovpn folders
+  file:
+    path: /tmp/ovpn_files
+    state: directory
+    mode: 0777
+  delegate_to: localhost
+
+- name: Fetch CA and tls-auth
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp/ovpn_files/
+    flat: yes
+  with_items:
+  - "{{ easy_rsa_directory }}/pki/ca.crt"
+  - "{{ easy_rsa_directory }}/ta.key"
+
+- name: Fetch clients certificates
+  fetch:
+    src: "{{ easy_rsa_directory }}/pki/issued/{{ item }}.crt"
+    dest: /tmp/ovpn_files/
+    flat: yes
+  with_items:  "{{ ovpn_clients }}"
+
+- name: Fetch clients keys
+  fetch:
+    src: "{{ easy_rsa_directory }}/pki/private/{{ item }}.key"
+    dest: /tmp/ovpn_files/
+    flat: yes
+  with_items:  "{{ ovpn_clients }}"
+
+
+- name: Generate client ovpn files
+  template:
+    src: templates/client.ovpn.j2
+    dest: "/etc/openvpn/client_configs/{{ item }}.ovpn"
+  with_items: "{{ ovpn_clients }}"
+
+- name: Delete temporary files
+  file:
+    path: /tmp/ovpn_files/
+    state: absent
+  delegate_to: localhost
