@@ -53,20 +53,3 @@
     path: /tmp/ovpn_files/
     state: absent
   delegate_to: localhost
-
-- name: Verify OpenVPN connection
-  block:
-    template:
-      src: templates/client.ovpn.j2
-      dest: /tmp/client.ovpn
-    delegate_to: localhost
-
-    command: openvpn --config /tmp/client.ovpn --daemon
-    delegate_to: localhost
-
-    wait_for:
-      host: 10.8.0.1
-      port: 22
-      delay: 10
-  tags:
-    - verification
